@@ -78,6 +78,31 @@ describe Oat::Serializer do
         :self => "http://foo.bar.com/#{user1.id}"
       )
     end
-  end
 
+    context "when a serializer inherits from another serializer" do
+      let(:child_serializer) {
+        Class.new(@sc) do
+          schema do
+            attribute :id_plus_x, "#{item.id}_x"
+          end
+        end
+      }
+
+      it "produces the result of both schema blocks in order" do
+        serializer = child_serializer.new(user1, name: "child_controller")
+
+        expect(serializer.to_hash.fetch(:attributes)).to include(
+          special: 'Hello',
+          id: user1.id,
+          id_plus_x: "#{user1.id}_x",
+        )
+      end
+
+      it "does not affect the parent serializer" do
+        serializer = @sc.new(user1, :name => 'some_controller')
+
+        expect(serializer.to_hash.fetch(:attributes)).to_not have_key(:id_plus_x)
+      end
+    end
+  end
 end
