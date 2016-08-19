@@ -1,36 +1,55 @@
 # https://github.com/kevinswiber/siren
+require "oat/data_store"
+require "byebug"
+
 module Oat
   module Adapters
     class Siren < Oat::Adapter
 
       def initialize(*args)
         super
-        data[:links] = []
+        @data_store = DataStore.new
         data[:entities] = []
         data[:actions] = []
+      end
+
+      def to_hash
+        hash = super
+
+        hash[:properties] = data_store.properties if data_store.properties
+        hash[:rel] = data_store.rel if data_store.rel
+        hash[:class] = data_store.type if data_store.type
+
+        if data_store.links
+          hash[:links] = data_store.links.map {|rel, opts|
+            { rel: [rel].flatten }.merge(opts)
+          }
+        end
+
+        hash
       end
 
       # Sub-Entities have a required rel attribute
       # https://github.com/kevinswiber/siren#rel
       def rel(rels)
         # rel must be an array.
-        data[:rel] = Array(rels)
+        data_store.add_rel Array(rels)
       end
 
       def type(*types)
-        data[:class] = types
+        data_store.add_type(types)
       end
 
       def link(rel, opts = {})
-        data[:links] << {:rel => [rel].flatten}.merge(opts)
+        data_store.add_link(rel, opts)
       end
 
       def properties(&block)
-        data[:properties].merge! yield_props(&block)
+        data_store.add_properties(yield_props(&block))
       end
 
       def property(key, value)
-        data[:properties][key] = value
+        data_store.add_property(key, value)
       end
 
       alias_method :meta, :property
@@ -102,6 +121,9 @@ module Oat
         end
       end
 
+      private
+
+      attr_reader :data_store
     end
   end
 end

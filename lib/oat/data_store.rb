@@ -1,7 +1,7 @@
 module Oat
   class DataStore
     def initialize
-      @data = Hash.new {|h,k| h[k] = {}}
+      @data = {}
     end
 
     def links
@@ -9,11 +9,7 @@ module Oat
     end
 
     def add_link(rel, opts = {})
-      if opts.is_a?(Array)
-        data[:_links][rel] = opts.select { |link_obj| link_obj.include?(:href) }
-      else
-        data[:_links][rel] = opts if opts[:href]
-      end
+      (data[:_links] ||= {})[rel] = opts
     end
 
     def properties
@@ -35,7 +31,23 @@ module Oat
     end
 
     def add_entity(name, obj)
-      data[:_entities][name] = obj
+      (data[:_entities] ||= {})[name] = obj
+    end
+
+    def rel
+      data[:_rel]
+    end
+
+    def add_rel(rels)
+      data[:_rel] = rels
+    end
+
+    def type
+      data[:_type]
+    end
+
+    def add_type(types)
+      data[:_type] = types
     end
 
     private

@@ -18,7 +18,11 @@ module Oat
       end
 
       def link(rel, opts = {})
-        data_store.add_link(rel, opts)
+        if opts.is_a?(Array)
+          data_store.add_link rel, opts.select { |link_obj| link_obj.include?(:href) }
+        else
+          data_store.add_link rel, opts if opts[:href]
+        end
       end
 
       def properties(&block)
@@ -31,7 +35,7 @@ module Oat
 
       alias_method :meta, :property
 
-      def rel(rels)
+      def rel(_)
         # no-op to maintain interface compatibility with the Siren adapter
       end
 
